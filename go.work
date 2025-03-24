@@ -1,8 +1,0 @@
-go 1.23.3
-
-use (
-	./vendor/go-sqlite3-1.14.16
-	./vendor/godotenv-1.5.1
-	./vendor/goose-3.24.1
-	./vendor/sqlx-1.4.0
-)
