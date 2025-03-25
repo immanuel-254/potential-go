@@ -35,24 +35,11 @@ func (u *User) UserCreate(db *sqlx.DB, w http.ResponseWriter, r *http.Request) e
 
 	var user User
 	query := "INSERT INTO users (email, password, active, staff, admin, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING id, email, created, updated;"
-
-	row := db.QueryRow(query,
-		u.Email,
-		string(hash),
-		u.Active,
-		u.Staff,
-		u.Admin,
-		u.Created,
-	)
-
-	err = row.Scan(
-		&user.ID,
-		&user.Email,
-		&user.Created,
-		&user.Updated,
-	)
+	row := db.QueryRow(query, u.Email, string(hash), u.Active, u.Staff, u.Admin, u.Created)
+	err = row.Scan(&user.ID, &user.Email, &user.Created, &user.Updated)
 
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
@@ -60,14 +47,66 @@ func (u *User) UserCreate(db *sqlx.DB, w http.ResponseWriter, r *http.Request) e
 		User `json:"user"`
 	}
 
+	data.User = user
+
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 	return nil
 }
 
-func (u *User) UserRead(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
+func (u *User) UserRead(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
 
+	query := "SELECT id, email, isactive, isadmin, isstaff, created_at, updated_at FROM users WHERE id = ?;"
+	row := db.QueryRow(query, u.ID)
+	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		User `json:"user"`
+	}
+
+	data.User = *u
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
+}
+
+func (u *User) UserReadByEmail(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
+
+	query := "SELECT id, email, isactive, isadmin, isstaff, created_at, updated_at FROM users WHERE email = ?;"
+	row := db.QueryRow(query, u.Email)
+	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		User `json:"user"`
+	}
+
+	data.User = *u
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
 }
 
 func (u *User) UserUpdate(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
