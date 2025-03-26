@@ -61,7 +61,7 @@ func (u *User) UserRead(db *sqlx.DB, w http.ResponseWriter, r *http.Request) err
 		return errors.New("method not allowed")
 	}
 
-	query := "SELECT id, email, isactive, isadmin, isstaff, created_at, updated_at FROM users WHERE id = ?;"
+	query := "SELECT id, email, active, admin, isstaff, created, updated FROM users WHERE id = ?;"
 	row := db.QueryRow(query, u.ID)
 	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
 
@@ -88,7 +88,7 @@ func (u *User) UserReadByEmail(db *sqlx.DB, w http.ResponseWriter, r *http.Reque
 		return errors.New("method not allowed")
 	}
 
-	query := "SELECT id, email, isactive, isadmin, isstaff, created_at, updated_at FROM users WHERE email = ?;"
+	query := "SELECT id, email, active, admin, isstaff, created, updated FROM users WHERE email = ?;"
 	row := db.QueryRow(query, u.Email)
 	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
 
@@ -109,10 +109,210 @@ func (u *User) UserReadByEmail(db *sqlx.DB, w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-func (u *User) UserUpdate(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
+func (u *User) UserList(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
 
+	query := "SELECT id, email, isactive, isadmin, isstaff, created_at, updated_at FROM users ORDER BY id ASC;"
+	rows, err := db.Query(query)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	defer rows.Close()
+	var users []User
+
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.Active,
+			&user.Admin,
+			&user.Staff,
+			&user.Created,
+			&user.Updated,
+		); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return err
+		}
+		users = append(users, user)
+	}
+	if err := rows.Close(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+	if err := rows.Err(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		Users []User `json:"users"`
+	}
+
+	data.Users = users
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
 }
 
-func (u *User) UserDelete(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
+func (u *User) UserUpdateEmail(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
 
+	query := "UPDATE users SET email = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated"
+	row := db.QueryRow(query, u.Email, u.Updated, u.ID)
+	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		User `json:"user"`
+	}
+
+	data.User = *u
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
+}
+
+func (u *User) UserUpdatePassword(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
+
+	query := "UPDATE users SET password = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
+	row := db.QueryRow(query, u.Password, u.Updated, u.ID)
+	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		User `json:"user"`
+	}
+
+	data.User = *u
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
+}
+
+func (u *User) UserUpdateActive(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
+
+	query := "UPDATE users SET active = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
+	row := db.QueryRow(query, u.Active, u.Updated, u.ID)
+	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		User `json:"user"`
+	}
+
+	data.User = *u
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
+}
+
+func (u *User) UserUpdateStaff(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
+
+	query := "UPDATE users SET staff = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
+	row := db.QueryRow(query, u.Staff, u.Updated, u.ID)
+	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		User `json:"user"`
+	}
+
+	data.User = *u
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
+}
+
+func (u *User) UserUpdateAdmin(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
+
+	query := "UPDATE users SET admin = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
+	row := db.QueryRow(query, u.Active, u.Updated, u.ID)
+	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	var data struct {
+		User `json:"user"`
+	}
+
+	data.User = *u
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	return nil
+}
+
+func (u *User) UserDelete(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return errors.New("method not allowed")
+	}
+
+	query := "DELETE FROM users WHERE id = ?;"
+	row := db.QueryRow(query, u.ID)
+	err := row.Scan()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return nil
 }
