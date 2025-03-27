@@ -21,10 +21,15 @@ type User struct {
 	Updated  time.Time `db:"updated" json:"updated"`
 }
 
-func (u *User) UserCreate(db *sqlx.DB, w http.ResponseWriter, r *http.Request) error {
+func (u *User) UserCreate(db *sqlx.DB, confirm_password string, w http.ResponseWriter, r *http.Request) error {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return errors.New("method not allowed")
+	}
+
+	if u.Password != confirm_password {
+		w.WriteHeader(http.StatusBadRequest)
+		return errors.New("password is invalid")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
@@ -169,8 +174,9 @@ func (u *User) UserUpdateEmail(db *sqlx.DB, w http.ResponseWriter, r *http.Reque
 		return errors.New("method not allowed")
 	}
 
+	u.Updated = time.Now()
 	query := "UPDATE users SET email = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated"
-	row := db.QueryRow(query, u.Email, u.Updated, u.ID)
+	row := db.QueryRow(query, u.Email, u.Updated.String(), u.ID)
 	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
 
 	if err != nil {
@@ -196,8 +202,9 @@ func (u *User) UserUpdatePassword(db *sqlx.DB, w http.ResponseWriter, r *http.Re
 		return errors.New("method not allowed")
 	}
 
+	u.Updated = time.Now()
 	query := "UPDATE users SET password = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
-	row := db.QueryRow(query, u.Password, u.Updated, u.ID)
+	row := db.QueryRow(query, u.Password, u.Updated.String(), u.ID)
 	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
 
 	if err != nil {
@@ -223,8 +230,9 @@ func (u *User) UserUpdateActive(db *sqlx.DB, w http.ResponseWriter, r *http.Requ
 		return errors.New("method not allowed")
 	}
 
+	u.Updated = time.Now()
 	query := "UPDATE users SET active = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
-	row := db.QueryRow(query, u.Active, u.Updated, u.ID)
+	row := db.QueryRow(query, u.Active, u.Updated.String(), u.ID)
 	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
 
 	if err != nil {
@@ -250,8 +258,9 @@ func (u *User) UserUpdateStaff(db *sqlx.DB, w http.ResponseWriter, r *http.Reque
 		return errors.New("method not allowed")
 	}
 
+	u.Updated = time.Now()
 	query := "UPDATE users SET staff = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
-	row := db.QueryRow(query, u.Staff, u.Updated, u.ID)
+	row := db.QueryRow(query, u.Staff, u.Updated.String(), u.ID)
 	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
 
 	if err != nil {
@@ -277,8 +286,9 @@ func (u *User) UserUpdateAdmin(db *sqlx.DB, w http.ResponseWriter, r *http.Reque
 		return errors.New("method not allowed")
 	}
 
+	u.Updated = time.Now()
 	query := "UPDATE users SET admin = ?, updated = ? WHERE id = ? RETURNING id, email, active, admin, isstaff, created, updated;"
-	row := db.QueryRow(query, u.Active, u.Updated, u.ID)
+	row := db.QueryRow(query, u.Active, u.Updated.String(), u.ID)
 	err := row.Scan(&u.ID, &u.Email, &u.Active, &u.Admin, &u.Staff, &u.Created, &u.Updated)
 
 	if err != nil {
