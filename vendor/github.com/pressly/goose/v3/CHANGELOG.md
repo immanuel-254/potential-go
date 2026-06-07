@@ -7,6 +7,58 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v3.27.1] - 2026-04-24
+
+### Changed
+
+- Bump minimum Go version to 1.25.7
+- Various dependency upgrades
+
+## [v3.27.0] - 2026-02-22
+
+### Added
+
+- Preliminary Spanner dialect support (#966)
+
+### Changed
+
+- **Minimum Go version is now 1.25**
+- SQL migration templates no longer include `StatementBegin` and `StatementEnd` annotations. These
+  are only needed for complex statements containing semicolons (e.g., stored procedures). See
+  [docs](https://pressly.github.io/goose/documentation/annotations/#complex-statements) for details.
+- Various dependency upgrades
+
+## [v3.26.0] - 2025-10-03
+
+- Add `*slog.Logger` support to goose provider via option `WithSlog` (#989)
+- Add convenience `WithTableName` provider option (#985)
+- Minor bug fixes and dependency upgrades
+- Add general purpose `Locker` interface to support DB locking with a table-based Postgres
+  implementation via `lock.NewPostgresTableLocker` (#993 for more details)
+  - Unlike `SessionLocker`, this uses the `*sql.DB` connection pool
+  - Add `WithLocker` option to goose provider
+
+## [v3.25.0] - 2025-08-24
+
+- Upgrade go deps (#976)
+- Remove references/tests for vertica and add deprecation warnings (#978)
+- Add Aurora DSQL as a new database dialect to goose `Provider` (#971)
+- Add DDL isolation support for Aurora DSQL compatibility (#970)
+- Update Apply to respect no versioning option (#950)
+- Expose dialect `Querier` (#939)
+
+## [v3.24.3]
+
+- Add `GOOSE_TABLE` environment variable -- lower priority than `-table` flag, but higher than the
+  default table name. (#932)
+- Dependency updates
+
+## [v3.24.2]
+
+- Add `TableExists` table existence check for the mysql dialect (#895)
+- Upgrade **minimum Go version to 1.23**
+- Various dependency updates
+
 ## [v3.24.1]
 
 - Fix regression (`v3.23.1` and `v3.24.0`) in postgres migration table existence check for
@@ -222,7 +274,7 @@ Here's a quick summary:
 
 - Fix `sqlparser` to avoid skipping the last statement when it's not terminated with a semicolon
   within a StatementBegin/End block. (#580)
-- Add `go1.21` to the CI matrix.
+- Add `**go1.21**` to the CI matrix.
 - Bump minimum version of module in go.mod to `go1.19`.
 - Fix version output when installing pre-built binaries (#585).
 
@@ -260,7 +312,13 @@ Here's a quick summary:
 - Add new `context.Context`-aware functions and methods, for both sql and go migrations.
 - Return error when no migration files found or dir is not a directory.
 
-[Unreleased]: https://github.com/pressly/goose/compare/v3.24.1...HEAD
+[Unreleased]: https://github.com/pressly/goose/compare/v3.27.1...HEAD
+[v3.27.1]: https://github.com/pressly/goose/compare/v3.27.0...v3.27.1
+[v3.27.0]: https://github.com/pressly/goose/compare/v3.26.0...v3.27.0
+[v3.26.0]: https://github.com/pressly/goose/compare/v3.25.0...v3.26.0
+[v3.25.0]: https://github.com/pressly/goose/compare/v3.24.3...v3.25.0
+[v3.24.3]: https://github.com/pressly/goose/compare/v3.24.2...v3.24.3
+[v3.24.2]: https://github.com/pressly/goose/compare/v3.24.1...v3.24.2
 [v3.24.1]: https://github.com/pressly/goose/compare/v3.24.0...v3.24.1
 [v3.24.0]: https://github.com/pressly/goose/compare/v3.23.1...v3.24.0
 [v3.23.1]: https://github.com/pressly/goose/compare/v3.23.0...v3.23.1
