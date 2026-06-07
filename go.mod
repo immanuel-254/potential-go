@@ -16,3 +16,5 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 )
+
+replace github.com/jmoiron/sqlx => github.com/immanuel-254/sqlx v1.4.1

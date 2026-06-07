@@ -1,4 +1,4 @@
-# github.com/jmoiron/sqlx v1.4.0
+# github.com/jmoiron/sqlx v1.4.0 => github.com/immanuel-254/sqlx v1.4.1
 ## explicit; go 1.10
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
@@ -38,3 +38,4 @@ golang.org/x/crypto/blowfish
 # golang.org/x/sync v0.20.0
 ## explicit; go 1.25.0
 golang.org/x/sync/errgroup
+# github.com/jmoiron/sqlx => github.com/immanuel-254/sqlx v1.4.1
